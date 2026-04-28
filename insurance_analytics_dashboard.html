@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Insurance Risk Analytics Dashboard | Mohit Sahariya</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#070E1A;--navy2:#0C1624;--navy3:#111F2E;--card:#0D1B2C;
+  --blue:#1A6FEB;--blue2:#4B9EFF;--cyan:#22D3EE;
+  --green:#10B981;--red:#F43F5E;--gold:#F59E0B;
+  --purple:#8B5CF6;--orange:#F97316;
+  --white:#EEF5FF;--muted:#6B8099;
+  --border:rgba(26,111,235,0.15);--border2:rgba(26,111,235,0.07);
+  --font-serif:'DM Serif Display',serif;
+  --font-sans:'DM Sans',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--navy);color:var(--white);font-family:var(--font-sans);font-size:15px;line-height:1.6;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(26,111,235,0.07) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 40% at 80% 100%,rgba(139,92,246,0.05) 0%,transparent 60%),
+             linear-gradient(rgba(26,111,235,0.025) 1px,transparent 1px),
+             linear-gradient(90deg,rgba(26,111,235,0.025) 1px,transparent 1px);
+  background-size:auto,auto,52px 52px,52px 52px;pointer-events:none;z-index:0;}
+
+/* HEADER */
+header{position:relative;z-index:2;padding:44px 60px 36px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(12,22,36,0.98) 0%,transparent 100%);}
+.hdr-inner{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap;}
+.project-tag{font-family:var(--font-mono);font-size:0.7rem;color:var(--cyan);letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.project-tag::before{content:'';width:20px;height:1px;background:var(--cyan);}
+h1{font-family:var(--font-serif);font-size:clamp(1.9rem,3.8vw,3rem);line-height:1.1;margin-bottom:10px;}
+h1 em{font-style:italic;color:var(--blue2);}
+.hdr-desc{color:var(--muted);max-width:560px;font-size:.94rem;line-height:1.7;}
+.author-card{background:rgba(13,27,44,0.9);border:1px solid var(--border);border-radius:12px;
+  padding:18px 22px;backdrop-filter:blur(10px);min-width:245px;}
+.author-top{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.av{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--cyan));
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;color:#fff;
+  flex-shrink:0;box-shadow:0 0 20px rgba(26,111,235,0.4);}
+.av-name{font-weight:700;font-size:.97rem;}
+.av-role{font-size:.76rem;color:var(--muted);}
+.av-links{display:flex;flex-direction:column;gap:5px;}
+.av-link{font-family:var(--font-mono);font-size:.7rem;color:var(--blue2);text-decoration:none;
+  display:flex;align-items:center;gap:6px;transition:color .2s;}
+.av-link:hover{color:var(--cyan);}
+.hdr-tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:18px;}
+.htag{font-family:var(--font-mono);font-size:.67rem;padding:3px 11px;border-radius:3px;
+  border:1px solid var(--border);color:var(--muted);letter-spacing:.04em;cursor:default;}
+.htag.hi{background:rgba(26,111,235,.12);border-color:rgba(26,111,235,.35);color:var(--blue2);}
+
+/* KPI STRIP */
+.kpi-strip{position:relative;z-index:2;display:grid;grid-template-columns:repeat(6,1fr);
+  background:var(--navy2);border-bottom:1px solid var(--border);}
+.kpi{padding:22px 20px;border-right:1px solid var(--border2);transition:background .2s;
+  position:relative;overflow:hidden;cursor:default;}
+.kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--kc,var(--blue)),transparent);
+  transform:scaleX(0);transition:transform .3s;transform-origin:left;}
+.kpi:hover::after{transform:scaleX(1);}
+.kpi:hover{background:rgba(26,111,235,.04);}
+.kpi:last-child{border-right:none;}
+.kpi-ico{font-size:1.2rem;margin-bottom:9px;}
+.kpi-lbl{font-family:var(--font-mono);font-size:.6rem;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.12em;margin-bottom:5px;}
+.kpi-val{font-size:1.65rem;font-weight:700;line-height:1;margin-bottom:3px;}
+.kpi-sub{font-size:.72rem;color:var(--muted);}
+
+/* SECTION HEADER */
+.s-head{display:flex;align-items:center;gap:10px;margin:36px 0 18px;
+  font-size:.86rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;}
+.s-head::before{content:'';width:3px;height:16px;border-radius:2px;
+  background:linear-gradient(var(--blue),var(--cyan));flex-shrink:0;}
+.s-head::after{content:'';flex:1;height:1px;background:var(--border2);}
+
+/* LAYOUT */
+main{position:relative;z-index:1;padding:32px 60px 80px;max-width:1500px;margin:0 auto;}
+.row{display:grid;gap:20px;margin-bottom:20px;}
+.c2{grid-template-columns:1fr 1fr;}
+.c3{grid-template-columns:1fr 1fr 1fr;}
+.c32{grid-template-columns:3fr 2fr;}
+
+/* CARD */
+.card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:24px;
+  backdrop-filter:blur(8px);position:relative;overflow:hidden;transition:border-color .25s,box-shadow .25s;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(26,111,235,.22),transparent);}
+.card:hover{border-color:rgba(26,111,235,.32);box-shadow:0 10px 36px rgba(0,0,0,.28);}
+.card-title{font-family:var(--font-mono);font-size:.68rem;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.1em;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.card-title .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.cw{position:relative;width:100%;}
+
+/* INSIGHT */
+.ins{background:rgba(26,111,235,.06);border:1px solid rgba(26,111,235,.18);
+  border-left:3px solid var(--blue2);border-radius:0 8px 8px 0;
+  padding:11px 15px;margin-top:13px;font-size:.81rem;color:rgba(238,245,255,.8);line-height:1.65;}
+.ins strong{color:var(--cyan);}
+.ins.r{border-left-color:var(--red);background:rgba(244,63,94,.05);border-color:rgba(244,63,94,.15);}
+.ins.g{border-left-color:var(--green);background:rgba(16,185,129,.05);border-color:rgba(16,185,129,.15);}
+.ins.y{border-left-color:var(--gold);background:rgba(245,158,11,.05);border-color:rgba(245,158,11,.15);}
+
+/* TABLE */
+.dtable{width:100%;border-collapse:collapse;}
+.dtable th{font-family:var(--font-mono);font-size:.62rem;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.09em;padding:9px 13px;text-align:left;border-bottom:1px solid var(--border);}
+.dtable td{padding:10px 13px;font-size:.87rem;border-bottom:1px solid var(--border2);}
+.dtable tr:hover td{background:rgba(26,111,235,.04);}
+.dtable tr:last-child td{border-bottom:none;}
+.pill{display:inline-flex;align-items:center;justify-content:center;padding:2px 9px;
+  border-radius:20px;font-size:.7rem;font-weight:600;}
+.pill.r{background:rgba(244,63,94,.15);color:var(--red);}
+.pill.g{background:rgba(16,185,129,.15);color:var(--green);}
+.pill.y{background:rgba(245,158,11,.15);color:var(--gold);}
+
+/* COMP BARS */
+.comp-row{display:flex;flex-direction:column;gap:9px;}
+.comp-item{display:flex;flex-direction:column;gap:4px;}
+.comp-lbl{display:flex;justify-content:space-between;font-size:.81rem;}
+.comp-lbl span:last-child{font-family:var(--font-mono);font-size:.76rem;font-weight:600;}
+.comp-track{height:7px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;}
+.comp-fill{height:100%;border-radius:4px;}
+
+/* STAT BOXES */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.stat-box{background:rgba(7,14,26,.55);border:1px solid var(--border2);border-radius:10px;padding:16px;transition:border-color .2s;}
+.stat-box:hover{border-color:rgba(26,111,235,.3);}
+.sb-lbl{font-family:var(--font-mono);font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px;}
+.sb-val{font-size:1.4rem;font-weight:700;line-height:1;}
+.sb-sub{font-size:.73rem;color:var(--muted);margin-top:4px;}
+
+/* RECO */
+.reco-list{display:flex;flex-direction:column;gap:13px;}
+.reco-item{display:flex;gap:14px;align-items:flex-start;padding:14px;
+  background:rgba(7,14,26,.5);border:1px solid var(--border2);border-radius:10px;transition:border-color .2s;}
+.reco-item:hover{border-color:rgba(26,111,235,.25);}
+.reco-num{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-weight:700;font-size:.83rem;flex-shrink:0;}
+.reco-body strong{display:block;font-size:.9rem;color:var(--white);margin-bottom:4px;}
+.reco-body span{font-size:.81rem;color:var(--muted);line-height:1.55;}
+
+/* SUMMARY ROW */
+.sum-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border2);font-size:.9rem;}
+.sum-row:last-child{border-bottom:none;}
+.sum-key{color:var(--muted);}
+.sum-val{font-weight:600;color:var(--white);}
+
+/* FOOTER */
+footer{position:relative;z-index:1;text-align:center;padding:28px;border-top:1px solid var(--border);
+  font-family:var(--font-mono);font-size:.7rem;color:var(--muted);letter-spacing:.06em;}
+footer a{color:var(--blue2);text-decoration:none;}
+
+@media(max-width:900px){
+  header,main{padding:28px 20px;}
+  .c2,.c3,.c32{grid-template-columns:1fr;}
+  .kpi-strip{grid-template-columns:repeat(3,1fr);}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="hdr-inner">
+    <div>
+      <div class="project-tag">// Data Analytics Project · Insurance Risk Analysis</div>
+      <h1>Medical Insurance<br/><em>Charges</em> Analytics</h1>
+      <p class="hdr-desc">Comprehensive analysis of 1,338 insurance beneficiaries — uncovering how smoking, BMI, age, and region drive premium charges. Built end-to-end with Python, Pandas & Matplotlib. Power BI ready.</p>
+      <div class="hdr-tags">
+        <span class="htag hi">Python</span><span class="htag hi">Pandas</span>
+        <span class="htag hi">Matplotlib</span><span class="htag hi">Seaborn</span>
+        <span class="htag hi">EDA</span><span class="htag hi">Risk Analysis</span>
+        <span class="htag">Feature Engineering</span><span class="htag">Actuarial Analytics</span>
+        <span class="htag">Power BI Ready</span><span class="htag">ML Ready</span>
+      </div>
+    </div>
+    <div class="author-card">
+      <div class="author-top">
+        <div class="av">MS</div>
+        <div><div class="av-name">Mohit Sahariya</div><div class="av-role">Data Analyst · Wipro Ltd.</div></div>
+      </div>
+      <div class="av-links">
+        <a class="av-link" href="https://mohitsahariya.github.io/MyPortfolio/" target="_blank">🌐 mohitsahariya.github.io/MyPortfolio</a>
+        <a class="av-link" href="mailto:mohit2012sahariya@gmail.com">✉️ mohit2012sahariya@gmail.com</a>
+        <a class="av-link" href="https://linkedin.com/in/mohit-s-09a871279" target="_blank">💼 linkedin.com/in/mohit-s-09a871279</a>
+        <a class="av-link" href="https://wa.me/918233417267" target="_blank">💬 +91-8233417267</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- KPI STRIP -->
+<div class="kpi-strip">
+  <div class="kpi" style="--kc:var(--blue2)"><div class="kpi-ico">👥</div><div class="kpi-lbl">Total Beneficiaries</div><div class="kpi-val" style="color:var(--blue2)">1,338</div><div class="kpi-sub">0 missing values</div></div>
+  <div class="kpi" style="--kc:var(--gold)"><div class="kpi-ico">💰</div><div class="kpi-lbl">Avg Annual Premium</div><div class="kpi-val" style="color:var(--gold)">$13,270</div><div class="kpi-sub">Median: $9,382</div></div>
+  <div class="kpi" style="--kc:var(--red)"><div class="kpi-ico">🚬</div><div class="kpi-lbl">Smoker Avg Premium</div><div class="kpi-val" style="color:var(--red)">$32,050</div><div class="kpi-sub">3.8× non-smoker avg</div></div>
+  <div class="kpi" style="--kc:var(--green)"><div class="kpi-ico">🏥</div><div class="kpi-lbl">Non-Smoker Avg</div><div class="kpi-val" style="color:var(--green)">$8,434</div><div class="kpi-sub">79.5% of population</div></div>
+  <div class="kpi" style="--kc:var(--purple)"><div class="kpi-ico">📍</div><div class="kpi-lbl">Highest Risk Region</div><div class="kpi-val" style="color:var(--purple)">SE</div><div class="kpi-sub">$14,735 avg · 25% smokers</div></div>
+  <div class="kpi" style="--kc:var(--cyan)"><div class="kpi-ico">💵</div><div class="kpi-lbl">Portfolio Value</div><div class="kpi-val" style="color:var(--cyan)">$17.7M</div><div class="kpi-sub">Total annual premiums</div></div>
+</div>
+
+<main>
+
+<!-- SECTION 1 -->
+<div class="s-head">🚬 Smoking — The #1 Cost Driver</div>
+<div class="row c3">
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--red)"></span>Smoker vs Non-Smoker Population</div>
+    <div class="cw" style="height:210px"><canvas id="smokerDonut"></canvas></div>
+    <div style="display:flex;justify-content:center;gap:28px;margin-top:12px;">
+      <div style="text-align:center"><div style="font-size:1.4rem;font-weight:700;color:var(--red)">274</div><div style="font-size:.72rem;color:var(--muted)">Smokers (20.5%)</div></div>
+      <div style="text-align:center"><div style="font-size:1.4rem;font-weight:700;color:var(--green)">1,064</div><div style="font-size:.72rem;color:var(--muted)">Non-Smokers (79.5%)</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--gold)"></span>Avg Charges: Smoker vs Non-Smoker</div>
+    <div class="cw" style="height:210px"><canvas id="smokerBar"></canvas></div>
+    <div class="ins r"><strong>Critical:</strong> Smokers pay <strong>3.8× more</strong> ($32,050 vs $8,434). Smoking is the strongest charge predictor — Pearson r = 0.787.</div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--blue2)"></span>Charges by Gender × Smoking Status</div>
+    <div class="cw" style="height:210px"><canvas id="sexSmokerBar"></canvas></div>
+    <div class="ins"><strong>Finding:</strong> Male smokers pay most ($33,042). Female non-smokers pay least ($8,762) — a <strong>$24,280 gap</strong> driven entirely by smoking.</div>
+  </div>
+</div>
+
+<!-- SECTION 2 -->
+<div class="s-head">📊 Charge Distribution & Correlation</div>
+<div class="row c2">
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--cyan)"></span>Distribution of Annual Charges ($)</div>
+    <div class="cw" style="height:240px"><canvas id="chargeDist"></canvas></div>
+    <div class="ins"><strong>Right-skewed distribution.</strong> 53.9% of beneficiaries pay under $10K/yr. The long right tail (&gt;$30K) is almost entirely smokers — confirming smoking as the key outlier driver.</div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--blue2)"></span>Feature Correlation with Insurance Charges</div>
+    <div class="cw" style="height:150px"><canvas id="corrChart"></canvas></div>
+    <div style="margin-top:16px;">
+      <div class="comp-row">
+        <div class="comp-item"><div class="comp-lbl"><span>Smoking Status</span><span style="color:var(--red);font-weight:700">r = 0.787</span></div><div class="comp-track"><div class="comp-fill" style="width:100%;background:linear-gradient(90deg,var(--red),rgba(244,63,94,.3))"></div></div></div>
+        <div class="comp-item"><div class="comp-lbl"><span>Age</span><span style="color:var(--gold);font-weight:700">r = 0.299</span></div><div class="comp-track"><div class="comp-fill" style="width:38%;background:linear-gradient(90deg,var(--gold),rgba(245,158,11,.3))"></div></div></div>
+        <div class="comp-item"><div class="comp-lbl"><span>BMI</span><span style="color:var(--blue2);font-weight:700">r = 0.198</span></div><div class="comp-track"><div class="comp-fill" style="width:25%;background:linear-gradient(90deg,var(--blue2),rgba(75,158,255,.3))"></div></div></div>
+        <div class="comp-item"><div class="comp-lbl"><span>Children</span><span style="color:var(--muted);font-weight:600">r = 0.068</span></div><div class="comp-track"><div class="comp-fill" style="width:8.6%;background:var(--muted)"></div></div></div>
+      </div>
+    </div>
+    <div class="ins r"><strong>Key:</strong> Smoking (r=0.787) is <strong>4× more correlated</strong> with charges than age (r=0.299). It must be the #1 variable in any actuarial pricing model.</div>
+  </div>
+</div>
+
+<!-- SECTION 3 -->
+<div class="s-head">📈 Age & BMI Impact on Premiums</div>
+<div class="row c2">
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--purple)"></span>Avg Charges by Age Group × Smoking Status</div>
+    <div class="cw" style="height:250px"><canvas id="ageChart"></canvas></div>
+    <div class="ins"><strong>Finding:</strong> Charges rise with age for both groups. A non-smoker aged 51–64 ($13,540) still pays <strong>less</strong> than the youngest smoker cohort 18–30 ($27,528).</div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--orange)"></span>Avg Charges by BMI Category × Smoking Status</div>
+    <div class="cw" style="height:250px"><canvas id="bmiChart"></canvas></div>
+    <div class="ins r"><strong>Critical:</strong> Obese smokers avg <strong>$41,693</strong> — nearly <strong>5× the portfolio mean</strong>. BMI compounds smoking risk exponentially, not linearly.</div>
+  </div>
+</div>
+
+<!-- SECTION 4 -->
+<div class="s-head">🗺️ Regional Risk Profile</div>
+<div class="row c32">
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--cyan)"></span>Avg Charges & Smoker Rate by Region</div>
+    <div class="cw" style="height:260px"><canvas id="regionChart"></canvas></div>
+    <div class="ins y"><strong>Finding:</strong> Southeast has the highest avg charges ($14,735) AND the highest smoker rate (25%) — making it the most expensive region in this portfolio.</div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--purple)"></span>Regional Risk Scorecard</div>
+    <table class="dtable">
+      <thead><tr><th>Region</th><th>Members</th><th>Avg Charges</th><th>Smoker %</th><th>Risk</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Southeast</strong></td><td>364</td><td style="color:var(--red)"><strong>$14,735</strong></td><td>25.0%</td><td><span class="pill r">High</span></td></tr>
+        <tr><td><strong>Northeast</strong></td><td>324</td><td>$13,406</td><td>20.7%</td><td><span class="pill y">Medium</span></td></tr>
+        <tr><td><strong>Northwest</strong></td><td>325</td><td>$12,418</td><td>17.8%</td><td><span class="pill g">Low</span></td></tr>
+        <tr><td><strong>Southwest</strong></td><td>325</td><td style="color:var(--green)">$12,347</td><td>17.8%</td><td><span class="pill g">Low</span></td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:18px;">
+      <div style="font-family:var(--font-mono);font-size:.63rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Smoker Rate by Region</div>
+      <div class="comp-row">
+        <div class="comp-item"><div class="comp-lbl"><span>Southeast</span><span style="color:var(--red)">25.0%</span></div><div class="comp-track"><div class="comp-fill" style="width:100%;background:linear-gradient(90deg,var(--red),rgba(244,63,94,.3))"></div></div></div>
+        <div class="comp-item"><div class="comp-lbl"><span>Northeast</span><span style="color:var(--gold)">20.7%</span></div><div class="comp-track"><div class="comp-fill" style="width:82.8%;background:linear-gradient(90deg,var(--gold),rgba(245,158,11,.3))"></div></div></div>
+        <div class="comp-item"><div class="comp-lbl"><span>Northwest</span><span style="color:var(--green)">17.8%</span></div><div class="comp-track"><div class="comp-fill" style="width:71.2%;background:linear-gradient(90deg,var(--green),rgba(16,185,129,.3))"></div></div></div>
+        <div class="comp-item"><div class="comp-lbl"><span>Southwest</span><span style="color:var(--green)">17.8%</span></div><div class="comp-track"><div class="comp-fill" style="width:71.2%;background:linear-gradient(90deg,var(--green),rgba(16,185,129,.3))"></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 5 -->
+<div class="s-head">👨‍👩‍👧 Children & Portfolio Overview</div>
+<div class="row c3">
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--green)"></span>Avg Charges by No. of Children</div>
+    <div class="cw" style="height:210px"><canvas id="childrenChart"></canvas></div>
+    <div class="ins"><strong>Finding:</strong> Families with 2–3 children have the highest avg charges. At 5 children, charges drop — likely younger parents with lower age-related risk.</div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--gold)"></span>Portfolio Statistics</div>
+    <div class="stat-grid">
+      <div class="stat-box"><div class="sb-lbl">Max Charge</div><div class="sb-val" style="color:var(--red)">$63,770</div><div class="sb-sub">Smoker · Obese · Age 54</div></div>
+      <div class="stat-box"><div class="sb-lbl">Min Charge</div><div class="sb-val" style="color:var(--green)">$1,122</div><div class="sb-sub">Non-Smoker · Age 18</div></div>
+      <div class="stat-box"><div class="sb-lbl">Avg BMI</div><div class="sb-val" style="color:var(--gold)">30.7</div><div class="sb-sub">Obese threshold = 30</div></div>
+      <div class="stat-box"><div class="sb-lbl">Avg Age</div><div class="sb-val" style="color:var(--blue2)">39.2 yrs</div><div class="sb-sub">Range: 18–64</div></div>
+      <div class="stat-box"><div class="sb-lbl">Std Deviation</div><div class="sb-val" style="color:var(--purple)">$12,110</div><div class="sb-sub">High charge spread</div></div>
+      <div class="stat-box"><div class="sb-lbl">75th Percentile</div><div class="sb-val" style="color:var(--cyan)">$16,640</div><div class="sb-sub">Top quartile threshold</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--purple)"></span>Actuarial Recommendations</div>
+    <div class="reco-list">
+      <div class="reco-item"><div class="reco-num" style="background:rgba(244,63,94,.15);color:var(--red)">01</div><div class="reco-body"><strong>Justify 3.8× Smoker Surcharge</strong><span>r=0.787 confirms actuarial soundness. Verify smoking status at every renewal cycle.</span></div></div>
+      <div class="reco-item"><div class="reco-num" style="background:rgba(245,158,11,.15);color:var(--gold)">02</div><div class="reco-body"><strong>Separate Obese-Smoker Risk Tier</strong><span>$41,693 avg (5× mean). Dedicated risk pool + BMI reduction incentives.</span></div></div>
+      <div class="reco-item"><div class="reco-num" style="background:rgba(16,185,129,.15);color:var(--green)">03</div><div class="reco-body"><strong>Southeast Regional Premium Uplift</strong><span>25% smoker rate + highest avg charges → 8–12% regional adjustment recommended.</span></div></div>
+      <div class="reco-item"><div class="reco-num" style="background:rgba(139,92,246,.15);color:var(--purple)">04</div><div class="reco-body"><strong>Build XGBoost Pricing Model</strong><span>Smoking + age + BMI → estimated R²&gt;0.85. Engineer bmi×smoker interaction feature first.</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 6 -->
+<div class="s-head">📋 Project Summary</div>
+<div class="row c2">
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--blue2)"></span>Dataset & Methodology</div>
+    <div class="sum-row"><span class="sum-key">Dataset Size</span><span class="sum-val">1,338 beneficiaries</span></div>
+    <div class="sum-row"><span class="sum-key">Features</span><span class="sum-val">7 (age, sex, bmi, children, smoker, region, charges)</span></div>
+    <div class="sum-row"><span class="sum-key">Missing Values</span><span class="sum-val" style="color:var(--green)">0 — Clean dataset</span></div>
+    <div class="sum-row"><span class="sum-key">Feature Engineering</span><span class="sum-val">bmi_cat, age_group, smoker_bin, sex_bin</span></div>
+    <div class="sum-row"><span class="sum-key">Primary Predictor</span><span class="sum-val" style="color:var(--red)">Smoking (r = 0.787)</span></div>
+    <div class="sum-row"><span class="sum-key">Highest Risk Segment</span><span class="sum-val">Obese Smokers ($41,693 avg)</span></div>
+    <div class="sum-row"><span class="sum-key">Charts Generated</span><span class="sum-val">9 Matplotlib PNGs + HTML Dashboard</span></div>
+    <div class="sum-row"><span class="sum-key">Tools Used</span><span class="sum-val">Python · Pandas · Matplotlib · NumPy</span></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--green)"></span>Key Findings Summary</div>
+    <div class="reco-list">
+      <div class="reco-item"><div class="reco-num" style="background:rgba(244,63,94,.15);color:var(--red);font-size:.75rem;">🚬</div><div class="reco-body"><strong>Smoking = #1 Predictor (r=0.787)</strong><span>Smokers pay $32,050 avg vs $8,434 — a 3.8× multiplier across all demographics and regions.</span></div></div>
+      <div class="reco-item"><div class="reco-num" style="background:rgba(245,158,11,.15);color:var(--gold);font-size:.75rem;">⚖️</div><div class="reco-body"><strong>BMI × Smoking Interaction</strong><span>Obese non-smokers avg $8,853 but obese smokers avg $41,693. BMI alone is minor — combined with smoking it becomes catastrophic.</span></div></div>
+      <div class="reco-item"><div class="reco-num" style="background:rgba(139,92,246,.15);color:var(--purple);font-size:.75rem;">📈</div><div class="reco-body"><strong>Age Amplifies Risk</strong><span>Non-smoker 51–64 avg $13,540 — still below youngest smoker cohort ($27,528). Age adds cost, but not more than smoking alone.</span></div></div>
+      <div class="reco-item"><div class="reco-num" style="background:rgba(16,185,129,.15);color:var(--green);font-size:.75rem;">🗺️</div><div class="reco-body"><strong>Southeast is Dual-Risk Region</strong><span>Highest smoker rate (25%) AND highest avg charges ($14,735). Northwest/Southwest show lowest risk at 17.8% smoker rate.</span></div></div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  MOHIT SAHARIYA &nbsp;·&nbsp; DATA ANALYST &nbsp;·&nbsp; WIPRO LTD. &nbsp;·&nbsp;
+  <a href="https://mohitsahariya.github.io/MyPortfolio/">mohitsahariya.github.io/MyPortfolio</a>
+  &nbsp;·&nbsp; INSURANCE RISK ANALYTICS · 2026 · 1,338 RECORDS
+</footer>
+
+<script>
+Chart.defaults.color='#6B8099';
+Chart.defaults.font.family="'DM Sans',sans-serif";
+Chart.defaults.font.size=11;
+const GR={color:'rgba(26,111,235,0.07)',drawBorder:false};
+const NL={legend:{display:false}};
+const TT={backgroundColor:'rgba(7,14,26,0.95)',borderColor:'rgba(26,111,235,0.3)',borderWidth:1,
+  padding:11,titleColor:'#EEF5FF',bodyColor:'#6B8099',cornerRadius:8};
+
+new Chart('smokerDonut',{type:'doughnut',data:{labels:['Non-Smoker','Smoker'],datasets:[{data:[1064,274],
+  backgroundColor:['rgba(16,185,129,.85)','rgba(244,63,94,.85)'],borderColor:['#10B981','#F43F5E'],
+  borderWidth:2.5,hoverOffset:7}]},options:{responsive:true,maintainAspectRatio:false,cutout:'70%',
+  plugins:{...NL,tooltip:{...TT,callbacks:{label:c=>c.label+': '+c.parsed+' ('+(c.parsed/1338*100).toFixed(1)+'%)'}}} }});
+
+new Chart('smokerBar',{type:'bar',data:{labels:['Non-Smoker','Smoker'],datasets:[{data:[8434,32050],
+  backgroundColor:['rgba(16,185,129,.82)','rgba(244,63,94,.82)'],borderRadius:6,borderSkipped:false}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{...NL,tooltip:{...TT,callbacks:{label:c=>'$'+c.parsed.y.toLocaleString()}}},
+  scales:{y:{grid:GR,ticks:{callback:v=>'$'+v.toLocaleString()}},x:{grid:{display:false}}}}});
+
+new Chart('sexSmokerBar',{type:'bar',data:{labels:['F Non-Smoker','F Smoker','M Non-Smoker','M Smoker'],
+  datasets:[{data:[8762,30679,8087,33042],backgroundColor:['rgba(16,185,129,.8)','rgba(244,63,94,.75)',
+  'rgba(75,158,255,.8)','rgba(244,63,94,.92)'],borderRadius:6,borderSkipped:false}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{...NL,tooltip:{...TT,callbacks:{label:c=>'$'+c.parsed.y.toLocaleString()}}},
+  scales:{y:{grid:GR,ticks:{callback:v=>'$'+v.toLocaleString()}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
+
+new Chart('chargeDist',{type:'bar',data:{labels:['<$5K','$5-10K','$10-15K','$15-20K','$20-30K','$30-40K','$40K+'],
+  datasets:[{data:[359,353,268,85,111,83,79],backgroundColor:['rgba(16,185,129,.8)','rgba(34,211,238,.75)',
+  'rgba(75,158,255,.75)','rgba(245,158,11,.75)','rgba(249,115,22,.75)','rgba(244,63,94,.75)','rgba(244,63,94,.95)'],
+  borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,
+  plugins:{...NL,tooltip:{...TT,callbacks:{label:c=>c.parsed.y+' beneficiaries'}}},
+  scales:{y:{grid:GR},x:{grid:{display:false}}}}});
+
+new Chart('corrChart',{type:'bar',data:{labels:['Smoking','Age','BMI','Children'],datasets:[{data:[0.787,0.299,0.198,0.068],
+  backgroundColor:['rgba(244,63,94,.85)','rgba(245,158,11,.8)','rgba(75,158,255,.8)','rgba(107,128,153,.6)'],
+  borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,
+  plugins:{...NL,tooltip:{...TT,callbacks:{label:c=>'Pearson r = '+c.parsed.y}}},
+  scales:{y:{grid:GR,min:0,max:1,ticks:{callback:v=>'r='+v}},x:{grid:{display:false}}}}});
+
+new Chart('ageChart',{type:'bar',data:{labels:['18–30','31–40','41–50','51–64'],datasets:[
+  {label:'Non-Smoker',data:[4462,6631,9622,13540],backgroundColor:'rgba(16,185,129,.77)',borderRadius:4},
+  {label:'Smoker',data:[27528,30467,33392,38820],backgroundColor:'rgba(244,63,94,.77)',borderRadius:4}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{usePointStyle:true,pointStyle:'circle',padding:13,color:'#6B8099'}},
+  tooltip:{...TT,callbacks:{label:c=>c.dataset.label+': $'+c.parsed.y.toLocaleString()}}},
+  scales:{y:{grid:GR,ticks:{callback:v=>'$'+v.toLocaleString()}},x:{grid:{display:false}}}}});
+
+new Chart('bmiChart',{type:'bar',data:{labels:['Underweight','Normal','Overweight','Obese'],datasets:[
+  {label:'Non-Smoker',data:[5485,7735,8226,8853],backgroundColor:'rgba(16,185,129,.77)',borderRadius:4},
+  {label:'Smoker',data:[18810,19942,22491,41693],backgroundColor:'rgba(244,63,94,.82)',borderRadius:4}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{usePointStyle:true,pointStyle:'circle',padding:13,color:'#6B8099'}},
+  tooltip:{...TT,callbacks:{label:c=>c.dataset.label+': $'+c.parsed.y.toLocaleString()}}},
+  scales:{y:{grid:GR,ticks:{callback:v=>'$'+v.toLocaleString()}},x:{grid:{display:false}}}}});
+
+new Chart('regionChart',{type:'bar',data:{labels:['Southeast','Northeast','Northwest','Southwest'],datasets:[
+  {label:'Avg Charges ($)',data:[14735,13406,12418,12347],
+    backgroundColor:['rgba(244,63,94,.8)','rgba(245,158,11,.75)','rgba(16,185,129,.75)','rgba(16,185,129,.7)'],
+    borderRadius:5,yAxisID:'y'},
+  {label:'Smoker Rate (%)',data:[25,20.7,17.8,17.8],type:'line',borderColor:'#22D3EE',
+    backgroundColor:'rgba(34,211,238,.1)',pointBackgroundColor:'#22D3EE',pointRadius:5,tension:.35,yAxisID:'y2'}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{usePointStyle:true,pointStyle:'circle',padding:13,color:'#6B8099'}},tooltip:{...TT}},
+  scales:{y:{grid:GR,ticks:{callback:v=>'$'+v.toLocaleString()}},
+    y2:{position:'right',grid:{display:false},ticks:{callback:v=>v+'%'},min:0,max:35},x:{grid:{display:false}}}}});
+
+new Chart('childrenChart',{type:'bar',data:{labels:['0 kids','1 kid','2 kids','3 kids','4 kids','5 kids'],
+  datasets:[{data:[12366,12731,15074,15355,13851,8786],backgroundColor:['rgba(75,158,255,.7)','rgba(75,158,255,.75)',
+  'rgba(245,158,11,.8)','rgba(244,63,94,.75)','rgba(245,158,11,.7)','rgba(16,185,129,.75)'],borderRadius:5,borderSkipped:false}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{...NL,tooltip:{...TT,callbacks:{label:c=>'$'+c.parsed.y.toLocaleString()}}},
+  scales:{y:{grid:GR,ticks:{callback:v=>'$'+v.toLocaleString()}},x:{grid:{display:false}}}}});
+</script>
+</body>
+</html>
